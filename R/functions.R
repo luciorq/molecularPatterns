@@ -1,26 +1,23 @@
-
-#library(Hmisc)
 #library(dplyr)
 #require(ggplot2)
 #require(ggseqlogo)
-
-#weblogo requirementes
-#library("devtools")
-#install_github("omarwagih/ggseqlogo")
-
-
-#cbPalette_old <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
-
-cbPalette <- c( "#D55E00","#F0E442","#0072B2","#009E73","#999999", "#E69F00", "#56B4E9", "#CC79A7")
+##  utils::suppressForeignCheck(c("x.values", "y.values"))
 
 
 ##########################################################################################################################aux function
-
 #' multiplot
 #'
-#' Recebe um vetor de números e retorna um vetor de números somando dois
+#' plot multiple something
 #'
-#' @param x vetor de números.
+#' @param ... xxx
+#'
+#' @param plotlist xxx
+#'
+#' @param file xxx
+#'
+#' @param cols xxx
+#'
+#' @param layout xxx
 #'
 #' @export
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
@@ -46,7 +43,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   } else {
     # Set up the page
     grid::grid.newpage()
-    grid::pushViewport(grid::viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    grid::pushViewport(grid::viewport(layout = grid::grid.layout(nrow(layout), ncol(layout))))
 
     # Make each plot, in the correct location
     for (i in 1:numPlots) {
@@ -61,41 +58,53 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 #######################################################################################################################loading sam file
 #' Read and load SAM file
 #'
-#' loadSam ...
+#' read and load a sam file if the input is a valid path
 #'
 #' @param f SAM file path.
 #'
-#' @param sizeStart
+#' @param sizeStart Minimum value of size to evaluate
 #'
-#' @param sizeEnd
+#' @param sizeEnd Maximum value of size to evaluate
 #'
 #' @export
-loadSam <- function(f,sizeStart=11,sizeEnd=1000){
+loadSam <- function(f, sizeStart=11, sizeEnd=1000){
 
   if(!file.exists(f)){
-    print(paste("File ",f," does not exists!",sep=""))
+    print(paste("File ", f, " does not exists!", sep=""))
     return(FALSE)
   }else{
-    print(paste("Loading ",f," file...",sep=""))
-    aux = read.delim(f,sep="\t",header=FALSE,comment.char = "@")
+    print(paste("Loading ", f, " file...", sep=""))
+    aux <- utils::read.delim(f, sep="\t", header=FALSE, comment.char = "@")
 
-    samfile = aux[,c(1,2,3,4,10)] # getting important fields [read name, strand, reference name, start mapping, sequence]
-    remove(aux) #remove temp file
+    samfile = aux[, c(1, 2, 3, 4, 10)] # getting important fields [read name, strand, reference name, start mapping, sequence]
+    remove(aux) #remove temp object
 
-    colnames(samfile)<- c("read","strand","reference","start5p","sequence")
-    samfile$sequence=as.character(samfile$sequence)
-    samfile$size = nchar(samfile$sequence)
-    samfile$end3p = ifelse(samfile$strand == 0, samfile$start5p + samfile$size -1, samfile$start5p)
-    samfile$start5p = ifelse(samfile$strand == 16, samfile$end3p + samfile$size -1, samfile$start5p)
+    colnames(samfile) <- c("read","strand","reference","start5p","sequence")
+    samfile$sequence <- as.character(samfile$sequence)
+    samfile$size <- nchar(samfile$sequence)
+    samfile$end3p <- ifelse(samfile$strand == 0, samfile$start5p + samfile$size - 1, samfile$start5p)
+    samfile$start5p <- ifelse(samfile$strand == 16, samfile$end3p + samfile$size - 1, samfile$start5p)
 
-    samfile = subset(samfile,size >= sizeStart & size<=sizeEnd) #getting reads in interval sizeStart>= reads <= sizeEnd
-    samfile$firstBase = substr(samfile$sequence,1,1)
+    samfile <- subset(samfile, size >= sizeStart & size <= sizeEnd) #getting reads in interval sizeStart>= reads <= sizeEnd
+    samfile$firstBase <- substr(samfile$sequence, 1, 1)
 
 
     return(samfile)
   }
 }
 
+#######################################################################################################################loading sam file
+#' Read a SAM file and return it in BED format
+#'
+#' read a SAM file and convert the structure to a BED file
+#'
+#' @param f SAM file path.
+#'
+#' @param sizeStart Minimum value of size to evaluate
+#'
+#' @param sizeEnd Maximum value of size to evaluate
+#'
+#' @export
 loadSamLikeBed <- function(f,sizeStart=11,sizeEnd=1000){
 
   if(!file.exists(f)){
@@ -103,7 +112,7 @@ loadSamLikeBed <- function(f,sizeStart=11,sizeEnd=1000){
     return(FALSE)
   }else{
     print(paste("Loading ",f," file...",sep=""))
-    aux = read.delim(f,sep="\t",header=FALSE,comment.char = "@")
+    aux = utils::read.delim(f,sep="\t",header=FALSE,comment.char = "@")
 
     samfile = aux[,c(1,2,3,4,10)] # getting important fields [read name, strand, reference name, start mapping, sequence]
     remove(aux) #remove temp file
@@ -114,7 +123,7 @@ loadSamLikeBed <- function(f,sizeStart=11,sizeEnd=1000){
     samfile$end3p = ifelse(samfile$strand == 0, samfile$start5p + samfile$size -1, samfile$start5p)
     samfile$start5p = ifelse(samfile$strand == 16, samfile$end3p + samfile$size -1, samfile$start5p -1)
 
-    samfile = subset(samfile,size >= sizeStart & size<=sizeEnd) #getting reads in interval sizeStart>= reads <= sizeEnd
+    samfile = subset(samfile, "size" >= sizeStart & "size" <= sizeEnd ) #getting reads in interval sizeStart>= reads <= sizeEnd
     samfile$firstBase = substr(samfile$sequence,1,1)
 
 
@@ -123,24 +132,39 @@ loadSamLikeBed <- function(f,sizeStart=11,sizeEnd=1000){
 }
 
 ################################################################################################################plot distribution per base
-#' PlotSi
+#' Size distribution plots
 #'
-#' Recebe um vetor de números e retorna um vetor de números somando dois
+#' This function returns a ggplot object with ....
 #'
 #' @param samObject XXXX
+#
+#' @param ref xxx
 #'
+#' @param stranded xxx
+
+#' @param norm xxx
+#'
+#' @param sizeStart xxx
+#'
+#' @param sizeEnd xxx
+#'
+#' @param ymax xxx
+#'
+#' @param ymin xxx
 #'
 #' @export
-plotSizeDistribution <- function(samObject,ref=NULL,stranded=TRUE,norm=NULL,sizeStart=NULL,sizeEnd=NULL,ymax=NULL,ymin=NULL){
+plotSizeDistribution <- function(samObject, ref=NULL, stranded=TRUE, norm=NULL,
+                                 sizeStart=NULL, sizeEnd=NULL, ymax=NULL, ymin=NULL){
 
-  ylegend= "Number of small RNAs"
+  ylegend = "Number of small RNAs"
+  cbPalette <- c( "#D55E00","#F0E442","#0072B2","#009E73","#999999", "#E69F00", "#56B4E9", "#CC79A7")
 
   if(!is.null(ref)){
-    samObject = subset(samObject,reference ==ref)
+    samObject = subset(samObject, reference == ref)
   }
 
-  g = group_by(samObject,reference,strand,firstBase,size)
-  m=count(g,reference,strand,size,firstBase)
+  g = dplyr::group_by(samObject, reference, strand, firstBase, size)
+  m = dplyr::count(g, reference, strand, size, firstBase)
 
   #defining size interval to plot
   if(!is.null(sizeStart) && !is.null(sizeEnd)){
@@ -148,13 +172,13 @@ plotSizeDistribution <- function(samObject,ref=NULL,stranded=TRUE,norm=NULL,size
     xmax=sizeEnd + 1
   }else{
     xmin = min(m$size)
-    xmax= max(m$size)
+    xmax = max(m$size)
   }
 
   #normalizing
   if(!is.null(norm) ){
     m$n = (m$n / norm ) * 1000000
-    ylegend= "Number of small RNAs (RPM)"
+    ylegend = "Number of small RNAs (RPM)"
   }
 
   ##defining limits
@@ -165,47 +189,88 @@ plotSizeDistribution <- function(samObject,ref=NULL,stranded=TRUE,norm=NULL,size
 
   }else{
 
-    m2=group_by(m,size,strand)
-    s1 = summarise(m2,n=sum(n))
+    m2 = dplyr::group_by(m, size, strand)
+    s1 = dplyr::summarise(m2, n = sum(n))
     limit1_min = - max(s1$n)
     limit1_max = max(s1$n)
 
-    m3=group_by(m,size)
-    s2 = summarise(m3,n=sum(n))
+    m3=dplyr::group_by(m, size)
+    s2 = dplyr::summarise(m3, n = sum(n))
     limit2 = max(s2$n)
   }
 
   ##multiple value by -1 for negative strand
   m[m$strand==16,"n"] = m[m$strand==16,"n"] * -1
-  head(m)
+  utils::head(m)
 
 
   if(stranded==TRUE){
   ###both strands
-  plot = ggplot()+ theme_classic(base_size=16)+ geom_bar(data=m,aes(size,n,fill=firstBase),stat="identity",width=.8) +
-    scale_fill_manual("5' base\npreference",values = cbPalette) + ylim(limit1_min,limit1_max) + xlab("small RNA length (nt)") +
-    ylab(ylegend) + theme(panel.border = element_blank())+ xlim(xmin,xmax)+
-    theme(axis.line = element_line(color = 'black'))  + facet_grid(~reference)
+  plot <- ggplot2::ggplot() +
+    ggplot2::theme_classic(base_size = 16) +
+    ggplot2::geom_bar(data = m, ggplot2::aes(size, n, fill = firstBase), stat = "identity", width=.8) +
+    ggplot2::scale_fill_manual("5' base\npreference", values = cbPalette) +
+    ggplot2::ylim(limit1_min,limit1_max) +
+    ggplot2::xlab("small RNA length (nt)") +
+    ggplot2::ylab(ylegend) +
+    ggplot2::theme(panel.border = ggplot2::element_blank()) +
+    ggplot2::xlim(xmin,xmax) +
+    ggplot2::theme(axis.line = ggplot2::element_line(color = 'black'))  +
+    ggplot2::facet_grid(~reference)
   }else{
   #sum strands
-  plot= ggplot()+ theme_classic(base_size=16)+ geom_bar(data=m,aes(size,abs(n),fill=firstBase),stat="identity",width=.8) +
-    scale_fill_manual("5' base\npreference",values = cbPalette) + ylim(0,limit2) + xlab("small RNA length (nt)") +
-    ylab(ylegend) + theme(panel.border = element_blank())+ xlim(xmin,xmax)+
-    theme(axis.line = element_line(color = 'black'))   + facet_grid(~reference)
+  plot <- ggplot2::ggplot() +
+    ggplot2::theme_classic( base_size = 16) +
+    ggplot2::geom_bar( data = m, ggplot2::aes(size,abs(n),fill=firstBase),stat="identity",width=.8) +
+    ggplot2::scale_fill_manual("5' base\npreference",values = cbPalette) +
+    ggplot2::ylim(0,limit2) +
+    ggplot2::xlab("small RNA length (nt)") +
+    ggplot2::ylab(ylegend) +
+    ggplot2::theme(panel.border = ggplot2::element_blank()) +
+    ggplot2::xlim(xmin,xmax) +
+    ggplot2::theme(axis.line = ggplot2::element_line(color = 'black'))   +
+    ggplot2::facet_grid(~reference)
   }
 
   return(plot)
 }
 
 ###############################################################################################################calculating Density Per Base
-calcDensityPerBase <- function(samObject,ref,readSize=0,bin=1,refSize=NULL,norm=NULL,xmin=NULL,xmax=NULL,ymax=NULL,ymin=NULL){
+#' Calculate
+#'
+#' calculating Density Per Base
+#'
+#' @param samObject XXXX
+#
+#' @param ref xxx
+#'
+#' @param readSize xxx
+
+#' @param bin xxx
+#'
+#' @param refSize xxx
+#'
+#' @param norm xxx
+#'
+#' @param xmin xxx
+#'
+#' @param xmax xxx
+#'
+#' @param ymax xxx
+#'
+#' @param ymin xxx
+#'
+#' @export
+calcDensityPerBase <- function(samObject, ref, readSize=0, bin=1,
+                               refSize=NULL, norm=NULL, xmin=NULL,
+                               xmax=NULL, ymax=NULL, ymin=NULL){
 
 
   ##defining reads to use
   if(readSize==0){
-    samObject = subset(samObject,reference==ref)
+    samObject = subset( samObject, reference == ref )
   }else{
-    samObject = subset(samObject,reference==ref & size %in% readSize)
+    samObject = subset(samObject, reference == ref & size %in% readSize)
   }
 
 
@@ -297,17 +362,34 @@ calcDensityPerBase <- function(samObject,ref,readSize=0,bin=1,refSize=NULL,norm=
   }
 
 
-  ggplot(data=df_cov,aes(x=start))+ ylab("Small RNA density") +
-    xlab("Reference sequence (nt)") + ylim(limit_ymin,limit_ymax) +
-    theme_classic(base_size=16)+ xlim(limit_xmin,limit_xmax)+
-    geom_density(aes(y=totalPos),fill="#56B4E9",colour="#56B4E9",size=0.1,stat="identity") +
-    geom_density(aes(y=totalNeg*-1),colour="#D55E00",fill="#D55E00",size=0.1,stat="identity")  +
-    theme(panel.border = element_blank())+ theme(axis.line = element_line(color = 'black'))
+  ggplot2::ggplot(data=df_cov, ggplot2::aes(x=start)) +
+    ggplot2::ylab("Small RNA density") +
+    ggplot2::xlab("Reference sequence (nt)") +
+    ggplot2::ylim(limit_ymin,limit_ymax) +
+    ggplot2::theme_classic(base_size=16) +
+    ggplot2::xlim(limit_xmin,limit_xmax) +
+    ggplot2::geom_density(ggplot2::aes(y=totalPos),fill="#56B4E9",colour="#56B4E9",size=0.1,stat="identity") +
+    ggplot2::geom_density(ggplot2::aes(y=totalNeg*-1),colour="#D55E00",fill="#D55E00",size=0.1,stat="identity")  +
+    ggplot2::theme(panel.border = ggplot2::element_blank()) +
+    ggplot2::theme(axis.line = ggplot2::element_line(color = 'black'))
 
 }
 
-#######################################################################################################################weblogo function
-createWebLogo <- function(samObject,ref,sizeStart=18,sizeEnd=30){
+#######################################################################################################################
+#' weblogo function
+#'
+#' plot web logo
+#'
+#' @param samObject XXXX
+#
+#' @param ref xxx
+#'
+#' @param sizeStart xxx
+#'
+#' @param sizeEnd xxx
+#'
+#' @export
+createWebLogo <- function(samObject, ref, sizeStart=18, sizeEnd=30){
 
   #selecting sequence target
   target = subset(samObject,reference==ref & size >=sizeStart & sizeEnd <=sizeEnd)
@@ -323,22 +405,49 @@ createWebLogo <- function(samObject,ref,sizeStart=18,sizeEnd=30){
   target$sequence <- gsub("T", "U", target$sequence)
 
   #weblogo (+) reads
-  p1=ggplot(data=target) + geom_logo(target[target$strand==0,"sequence"], method = 'bits',seq_type = 'rna') + theme_logo() + theme_classic() + ylim(0,1)+ xlab(paste("nucleotide position - #sequences (+) : ",nreadsSense,sep=""))
+  p1 <- ggplot2::ggplot(data = target) +
+    ggseqlogo::geom_logo(target[target$strand==0,"sequence"], method = 'bits',seq_type = 'rna') +
+    ggseqlogo::theme_logo() +
+    ggplot2::theme_classic() +
+    ggplot2::ylim(0,1)+
+    ggplot2::xlab(paste("nucleotide position - #sequences (+) : ",nreadsSense,sep=""))
 
   #weblogo (-) reads
-  p2=ggplot(data=target) + geom_logo(target[target$strand==16,"sequence"], method = 'bits',seq_type = 'rna') + theme_logo() + theme_classic() + ylim(0,1)+xlab(paste("nucleotide position - #sequences (-) : ",nreadsAntisense,sep=""))
+  p2 <- ggplot2::ggplot(data = target) +
+    ggseqlogo::geom_logo(target[target$strand==16,"sequence"], method = 'bits',seq_type = 'rna') +
+    ggseqlogo::theme_logo() +
+    ggplot2::theme_classic() +
+    ggplot2::ylim(0,1) +
+    ggplot2::xlab(paste("nucleotide position - #sequences (-) : ",nreadsAntisense,sep=""))
 
   #multiplot (+) and (-) weblogos
   return (multiplot(p1, p2, cols=1))
 
 }
 
-#####################################################################################################################ACF
-calcACF <- function(samObject,ref,sizeStart=15,sizeEnd=30,regIni=1,regEnd=100){
+#####################################################################################################################
+#' ACF
+#'
+#' calculate ACF
+#'
+#' @param samObject XXXX
+#
+#' @param ref xxx
+#'
+#' @param sizeStart xxx
+#'
+#' @param sizeEnd xxx
+#'
+#' @param regIni xxx
+#'
+#' @param regEnd xxx
+#'
+#' @export
+calcACF <- function(samObject, ref, sizeStart=15, sizeEnd=30, regIni=1, regEnd=100){
 
   #selecting sequence target
-  target_pos = count(subset(samObject,reference==ref & size >=sizeStart & sizeEnd <=sizeEnd & strand==0),reference,start5p)
-  target_neg = count(subset(samObject,reference==ref & size >=sizeStart & sizeEnd <=sizeEnd & strand==16),reference,start5p)
+  target_pos = dplyr::count(subset(samObject,reference==ref & size >=sizeStart & sizeEnd <=sizeEnd & strand==0),reference,start5p)
+  target_neg = dplyr::count(subset(samObject,reference==ref & size >=sizeStart & sizeEnd <=sizeEnd & strand==16),reference,start5p)
 
   pos=integer()
   neg=integer()
@@ -355,75 +464,71 @@ calcACF <- function(samObject,ref,sizeStart=15,sizeEnd=30,regIni=1,regEnd=100){
   }
 
 
-  posacf <- acf(pos, plot = FALSE)
+  posacf <- stats::acf(pos, plot = FALSE)
   posacf2 <- with(posacf, data.frame(lag, acf))
 
-  acfPOS <- ggplot(data = posacf2, mapping = aes(x = lag, y = acf)) + geom_hline(aes(yintercept = 0)) + geom_segment(mapping = aes(xend = lag, yend = 0)) + theme_bw(base_size=12)+
-    xlab(paste("lag (reads sense: ",sum(target_pos$n),")",sep=""))
+  acfPOS <- ggplot2::ggplot(data = posacf2, mapping = ggplot2::aes(x = lag, y = acf)) +
+    ggplot2::geom_hline(ggplot2::aes(yintercept = 0)) +
+    ggplot2::geom_segment(mapping = ggplot2::aes(xend = lag, yend = 0)) +
+    ggplot2::theme_bw(base_size=12) +
+    ggplot2::xlab(paste("lag (reads sense: ",sum(target_pos$n),")",sep=""))
 
-  negacf <- acf(neg, plot = FALSE)
+  negacf <- stats::acf(neg, plot = FALSE)
   negacf2 <- with(negacf, data.frame(lag, acf))
 
-  acfNEG <- ggplot(data = negacf2, mapping = aes(x = lag, y = acf)) + geom_hline(aes(yintercept = 0)) + geom_segment(mapping = aes(xend = lag, yend = 0)) + theme_bw(base_size=12)+
-    xlab(paste("lag (reads antisense: ",sum(target_neg$n),")",sep=""))
+  acfNEG <- ggplot2::ggplot(data = negacf2, mapping = ggplot2::aes(x = lag, y = acf)) +
+    ggplot2::geom_hline(ggplot2::aes(yintercept = 0)) +
+    ggplot2::geom_segment(mapping = ggplot2::aes(xend = lag, yend = 0)) +
+    ggplot2::theme_bw(base_size=12) +
+    ggplot2::xlab(paste("lag (reads antisense: ",sum(target_neg$n),")",sep=""))
 
-  totacf <- acf(total, plot = FALSE)
+  totacf <- stats::acf(total, plot = FALSE)
   totacf2 <- with(totacf, data.frame(lag, acf))
 
-  acfTOTAL <- ggplot(data = totacf2, mapping = aes(x = lag, y = acf)) + geom_hline(aes(yintercept = 0)) + geom_segment(mapping = aes(xend = lag, yend = 0)) + theme_bw(base_size=12) +
-    xlab(paste("lag (all reads : ",sum(target_pos$n,target_neg$n),")",sep=""))
+  acfTOTAL <- ggplot2::ggplot(data = totacf2, mapping = ggplot2::aes(x = lag, y = acf)) +
+    ggplot2::geom_hline(ggplot2::aes(yintercept = 0)) +
+    ggplot2::geom_segment(mapping = ggplot2::aes(xend = lag, yend = 0)) +
+    ggplot2::theme_bw(base_size=12) +
+    ggplot2::xlab(paste("lag (all reads : ",sum(target_pos$n,target_neg$n),")",sep=""))
 
   multiplot(acfPOS,acfNEG,acfTOTAL,cols = 1)
-
-
 }
 
 
-
-#test  = loadSam("data/SPO-108.VSVgfp.v1.sam",15,30)
-
-#test distribution and density
-#head(test)
-#p=plotSizeDistribution(samObject = test,norm = 30000)
-#p=plotSizeDistribution(samObject = test,norm = 30000,sizeStart = 18,sizeEnd = 25)
-#calcDensityPerBase(test,"VSVgfp_Olmo",ymin=-10000,ymax=10000)
-
-#ACF
-#samObject =test
-#calcACF(test, ref)
-#ref='KU721836_synthetic'
-#regIni = 1
-#regEnd=1000
-#sizeStart=24
-#sizeEnd=24
+#####################################################################################################################
+#' Calculate phasing value
+#'
+#' calculate phasing
+#'
+#' @param samObject XXXX
 #
-##weblogo
-#samObject =test
-#ref='KU721836_synthetic'
-#sizeStart =26
-#sizeEnd   =30
-#createWebLogo(samObject, ref)
-#
-#
-#
-##phasing / offset test
-#test  = loadSam("data/SPO-108_10.synthetic_VSV.sam",24,30)
-#test  = loadSamLikeBed("data/teste_h100.sam",15,30)
-#samObject =test
-#nrow(test)
-#ref='KU721836_synthetic'
-#extend_upstream=20
-#extend_downstream=20
-#readSize=0
-#bin=1
-#min=1
-#max=12015
-#head(samObject)
-#
-calcPhasing <- function(samObject,ref,extend_upstream=20,
-                        extend_downstream=20,readSize=0,bin=1,
-                        refSize=NULL,norm=NULL,region_start=NULL,
-                        region_end=NULL,ymax=NULL,ymin=NULL){
+#' @param ref xxx
+#'
+#' @param extend_upstream xxx
+#'
+#' @param extend_downstream xxx
+#'
+#' @param readSize xxx
+#'
+#' @param bin xxx
+#'
+#' @param refSize xxx
+#'
+#' @param norm xxx
+#'
+#' @param region_start xxx
+#'
+#' @param region_end xxx
+#'
+#' @param ymax xxx
+#'
+#' @param ymin xxx
+#'
+#' @export
+calcPhasing <- function(samObject, ref, extend_upstream=20,
+                        extend_downstream=20, readSize=0, bin=1,
+                        refSize=NULL, norm=NULL, region_start=NULL,
+                        region_end=NULL, ymax=NULL, ymin=NULL){
 
   #1 : Parse command line
   #2: set_filter_region
@@ -455,9 +560,9 @@ calcPhasing <- function(samObject,ref,extend_upstream=20,
 
 
   #calculate_region_coverage
-  collapsed = count(samObject,reference,strand,size,start5p,end3p)
+  collapsed = dplyr::count(samObject,reference,strand,size,start5p,end3p)
   collapsed = as.data.frame(collapsed)
-  #head(collapsed)
+  #utils::head(collapsed)
 
   for( i in 1:nrow(collapsed)){
     chrom  = collapsed[i,"reference"]
@@ -480,8 +585,8 @@ calcPhasing <- function(samObject,ref,extend_upstream=20,
     }
   }
 
-  head (window_positive_sequences)
-  head (window_positive_reads)
+  utils::head(window_positive_sequences)
+  utils::head(window_positive_reads)
 
   ####sort_intervals_to_process
   collapsed = collapsed[order(collapsed$strand,collapsed$start5p,collapsed$end3p),]
@@ -516,8 +621,8 @@ calcPhasing <- function(samObject,ref,extend_upstream=20,
         extended_end   = nuc_position + extend_upstream
       }
 
-      extended_start = ifelse( extended_start <= 0,1, extended_start)
-      extended_end   = ifelse(extended_end > region_size-1,  region_size-1 ,extended_end +1)
+      extended_start = ifelse( extended_start <= 0 , 1, extended_start)
+      extended_end   = ifelse(extended_end > region_size-1,  region_size-1 ,extended_end+1)
 
 
       #print "extended region (start= $extended_start end= $extended_end nuc_pos=$nuc_position ) \n";
@@ -562,7 +667,7 @@ calcPhasing <- function(samObject,ref,extend_upstream=20,
         if ( sequences_count_same != 0 || reads_count_same != 0 || sequences_count_opposite != 0 || reads_count_opposite != 0) {
          line = data.frame(ref,genomic_nuc_position,"+",  nuc_position,offset,   ## This is the window offset
                   sequences_count_same ,reads_count_same,sequences_count_opposite,reads_count_opposite);
-          write.table(line,"output.tab",append = TRUE,col.names = FALSE,row.names = FALSE)
+          utils::write.table(line,"output.tab",append = TRUE,col.names = FALSE,row.names = FALSE)
           # result = rbind (result,c(ref,genomic_nuc_position,"+",  nuc_position,offset,   ## This is the window offset
         #  sequences_count_same ,reads_count_same,sequences_count_opposite,reads_count_opposite));
 

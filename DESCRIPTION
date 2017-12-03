@@ -12,6 +12,7 @@ LazyData: true
 RoxygenNote: 6.0.1
 Imports: ggplot2,
     dplyr,
-    Hmisc,
-    ggseqlogo
+    ggseqlogo,
+    utils,
+    stats
 Suggests: testthat

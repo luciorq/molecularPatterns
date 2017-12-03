@@ -7,8 +7,16 @@
 multiplot(..., plotlist = NULL, file, cols = 1, layout = NULL)
 }
 \arguments{
-\item{x}{vetor de números.}
+\item{...}{xxx}
+
+\item{plotlist}{xxx}
+
+\item{file}{xxx}
+
+\item{cols}{xxx}
+
+\item{layout}{xxx}
 }
 \description{
-Recebe um vetor de números e retorna um vetor de números somando dois
+plot multiple something
 }
