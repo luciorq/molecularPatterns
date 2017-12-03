@@ -123,6 +123,13 @@ loadSamLikeBed <- function(f,sizeStart=11,sizeEnd=1000){
 }
 
 ################################################################################################################plot distribution per base
+#' PlotSi
+#'
+#' Recebe um vetor de números e retorna um vetor de números somando dois
+#'
+#' @param samObject XXXX
+#'
+#' @export
 plotSizeDistribution <- function(samObject,ref=NULL,stranded=TRUE,norm=NULL,sizeStart=NULL,sizeEnd=NULL,ymax=NULL,ymin=NULL){
 
   ylegend= "Number of small RNAs"
