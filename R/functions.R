@@ -129,6 +129,7 @@ loadSamLikeBed <- function(f,sizeStart=11,sizeEnd=1000){
 #'
 #' @param samObject XXXX
 #'
+#'
 #' @export
 plotSizeDistribution <- function(samObject,ref=NULL,stranded=TRUE,norm=NULL,sizeStart=NULL,sizeEnd=NULL,ymax=NULL,ymin=NULL){
 
