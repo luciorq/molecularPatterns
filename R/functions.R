@@ -1,8 +1,10 @@
 #library(dplyr)
 #require(ggplot2)
 #require(ggseqlogo)
-##  utils::suppressForeignCheck(c("x.values", "y.values"))
-
+## for handling R CMD check on non standard evaluation calls
+utils::globalVariables(c("reference", "size","strand",
+                         "start5p","end3p","sizeGenome",
+                         "firstBase"))
 
 ##########################################################################################################################aux function
 #' multiplot
