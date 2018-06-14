@@ -17,6 +17,12 @@ multiplot(..., plotlist = NULL, file, cols = 1, layout = NULL)
 
 \item{layout}{xxx}
 }
+\value{
+The sum of \code{x} and \code{y}.
+}
 \description{
 plot multiple something
+function created by Winston Chang,
+in cookbook for R
+http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
 }

@@ -4,12 +4,15 @@
 ## for handling R CMD check on non standard evaluation calls
 utils::globalVariables(c("reference", "size","strand",
                          "start5p","end3p","sizeGenome",
-                         "firstBase"))
+                         "firstBase","acf","lag", "n"))
 
 ##########################################################################################################################aux function
 #' multiplot
 #'
 #' plot multiple something
+#' function created by Winston Chang,
+#' in cookbook for R
+#' http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
 #'
 #' @param ... xxx
 #'
@@ -20,6 +23,8 @@ utils::globalVariables(c("reference", "size","strand",
 #' @param cols xxx
 #'
 #' @param layout xxx
+#'
+#' @return The sum of \code{x} and \code{y}.
 #'
 #' @export
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
@@ -679,10 +684,3 @@ calcPhasing <- function(samObject, ref, extend_upstream=20,
       }
     }
   }
-#      tail(result)
-
-#}
-
-
-#}
-
