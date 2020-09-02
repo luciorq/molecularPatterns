@@ -1,15 +1,16 @@
 Package: molecularPatterns
-Title: Molecular patterns of small RNAs
+Title: Molecular Patterns of Small RNAs
 Version: 0.1.0
 Authors@R: c(
     person("Lucio", "Queiroz", email = "luciorqueiroz@gmail.com", role = c("aut", "cre") ),
     person("Eric", "Aguiar", email = "ericgdp@gmail.com", role = "aut") )
-Description: What the package does (one paragraph).
+Description: x
 Depends: R (>= 3.5.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
-Imports: ggplot2,
-    dplyr,
-    ggseqlogo
+Imports: 
+  ggplot2,
+  dplyr,
+  ggseqlogo

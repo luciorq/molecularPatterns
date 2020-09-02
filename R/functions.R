@@ -1,6 +1,3 @@
-#library(dplyr)
-#require(ggplot2)
-#require(ggseqlogo)
 ## for handling R CMD check on non standard evaluation calls
 utils::globalVariables(c("reference", "size","strand",
                          "start5p","end3p","sizeGenome",
